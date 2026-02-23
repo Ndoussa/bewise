@@ -13,4 +13,11 @@ class Quote {
       author: json['a'] ?? "Inconnu",            // ZenQuotes utilise 'a'
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'author': author,
+    };
+  }
 }

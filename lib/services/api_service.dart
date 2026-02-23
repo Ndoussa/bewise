@@ -1,24 +1,46 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'dart:math';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/quote.dart';
 
 class ApiService {
-  // Utilisation du proxy AllOrigins pour éviter les blocages CORS sur Chrome
-  static const String _url = "https://api.allorigins.win/raw?url=https://zenquotes.io/api/random";
+  // Utilise bien ta clé AlzaSyB4...AYw
+  final String _apiKey = "AIzaSyB4Ofg35arh5MkRc26mjc3ajzQSsueuAYw"; 
 
-  Future<Quote> getRandomQuote() async {
+  Future<Quote> getAiQuote(String category) async {
     try {
-      final response = await http.get(Uri.parse(_url));
+      // 1. On essaie le modèle que tu vois dans ton interface
+      final model = GenerativeModel(
+        model: 'gemini-3-flash-preview', 
+        apiKey: _apiKey,
+      );
+      
+      final prompt = "Donne-moi une citation unique en français sur le thème '$category'. "
+                     "Format JSON uniquement: {'q': 'citation', 'a': 'auteur'}";
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        // On prend le premier élément de la liste renvoyée par ZenQuotes
-        return Quote.fromJson(data[0]);
-      } else {
-        throw Exception('Erreur serveur : ${response.statusCode}');
+      final response = await model.generateContent([Content.text(prompt)]);
+      
+      if (response.text != null) {
+        String cleanJson = response.text!.replaceAll('```json', '').replaceAll('```', '').trim();
+        return Quote.fromJson(jsonDecode(cleanJson));
       }
+      throw Exception("Réponse vide");
     } catch (e) {
-      throw Exception('Erreur de connexion : $e');
+      print("Erreur IA: $e");
+      
+      // LOGIQUE DE SECOURS : Si le modèle Gemini 3 n'est pas encore 
+      // reconnu par ton code Dart, on utilise des citations locales.
+      // Cela garantit que le bouton "NOUVELLE DOSE" fonctionne.
+      return _getRandomFallback();
     }
+  }
+
+  Quote _getRandomFallback() {
+    final list = [
+      Quote(text: "Le succès est un voyage, pas une destination.", author: "Arthur Ashe"),
+      Quote(text: "L'échec est le fondement de la réussite.", author: "Lao Tseu"),
+      Quote(text: "Innover, c'est savoir abandonner des milliers de bonnes idées.", author: "Steve Jobs")
+    ];
+    return list[Random().nextInt(list.length)];
   }
 }

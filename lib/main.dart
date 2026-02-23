@@ -1,32 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/setup_screen.dart';
-import 'screens/home_screen.dart';
+import 'services/notification_service.dart'; // Import de ton nouveau service
 
-void main() async {
-  // Indispensable pour utiliser SharedPreferences avant runApp
+Future<void> main() async {
+  // 1. Indispensable pour les services qui utilisent du code natif (Notifications/Storage)
   WidgetsFlutterBinding.ensureInitialized();
-  
-  final prefs = await SharedPreferences.getInstance();
-  final bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
-  final String userName = prefs.getString('userName') ?? "";
 
-  runApp(MotivationApp(isFirstTime: isFirstTime, userName: userName));
+  try {
+    // 2. Initialisation du moteur de notifications
+    await NotificationService.init();
+
+    // 3. Planification automatique de la dose de 5h00
+    // Cette fonction s'assure que même si l'app est fermée, le système s'en souvient
+    await NotificationService.scheduleDaily5AMQuote();
+    
+    print("Système de notifications initialisé pour 05:00.");
+  } catch (e) {
+    print("Erreur lors de l'initialisation des services : $e");
+  }
+
+  runApp(const BeWiseApp());
 }
 
-class MotivationApp extends StatelessWidget {
-  final bool isFirstTime;
-  final String userName;
-  
-  const MotivationApp({super.key, required this.isFirstTime, required this.userName});
+class BeWiseApp extends StatelessWidget {
+  const BeWiseApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'BeWise Premium',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.dark, useMaterial3: true),
-      // Si c'est la 1ère fois, SetupScreen, sinon HomeScreen
-      home: isFirstTime ? const SetupScreen() : HomeScreen(userName: userName),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        // Utilisation de ColorScheme pour les versions récentes de Flutter
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueAccent,
+          brightness: Brightness.dark,
+        ),
+        fontFamily: 'Georgia',
+      ),
+      home: const SetupScreen(),
     );
   }
 }
