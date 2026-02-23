@@ -42,6 +42,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   share_plus: ^12.0.1
   flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
 
 
 
@@ -76,6 +77,11 @@ flutter_native_splash:
   android: true
   ios: true
   web: true
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: assets/bewise.png  
 
   # To add assets to your application, add an assets section, like this:
   # assets:
